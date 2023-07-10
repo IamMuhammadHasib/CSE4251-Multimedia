@@ -1,102 +1,103 @@
-#include <iostream>
-#include <fstream>
-#include <queue>
-#include <unordered_map>
-#include <vector>
+#include <bits/stdc++.h>
+#define MAX 100005
+#define pb push_back
+#define mp make_pair
+#define pii pair<long long, long long>
+#define vi vector<int>
+#define vl vector<long long>
+#define read(a) scanf("%d", &a)
+#define p1(a) cout << "Check " << a << endl;
+#define p2(a, b) cout << "Check " << a << ' ' << b << endl;
+#define fo(i, n) for (i = 0; i < n; i++)
+#define ll long long
+#define clr(a, b) memset(a, b, sizeof(a))
+#define MOD 1000000007
 
-struct HuffmanNode
-{
-    char data;
-    int freq;
-    HuffmanNode *left;
-    HuffmanNode *right;
-    HuffmanNode(char c, int f) : data(c), freq(f), left(nullptr), right(nullptr) {}
-};
+using namespace std;
+int const sz = (int)2e5 + 5;
 
-struct CompareNodes
+vector<int> adj[sz];
+
+void solve()
 {
-    bool operator()(const HuffmanNode *lhs, const HuffmanNode *rhs) const
+    string s = "HELLO";
+    getline(cin, s);
+    map<int, int> has;
+
+    for (int i = 0; i < s.size(); i++)
+        has[int(s[i])]++;
+    priority_queue<pii, vector<pii>, greater<pii>> pq;
+    for (auto it : has)
     {
-        return lhs->freq > rhs->freq;
+        pq.push({it.second, it.first});
     }
-};
-
-void buildHuffmanTree(std::unordered_map<char, int> &freqMap, HuffmanNode *&root)
-{
-    std::priority_queue<HuffmanNode *, std::vector<HuffmanNode *>, CompareNodes> pq;
-    for (const auto &[c, f] : freqMap)
+    int node = 256;
+    while (pq.size() != 1)
     {
-        pq.push(new HuffmanNode(c, f));
-    }
-    while (pq.size() > 1)
-    {
-        HuffmanNode *left = pq.top();
+        auto u = pq.top();
         pq.pop();
-        HuffmanNode *right = pq.top();
+        // cout<<u.first<<' '<<u.second<<endl;
+        auto v = pq.top();
         pq.pop();
-        int combinedFreq = left->freq + right->freq;
-        HuffmanNode *newNode = new HuffmanNode('$', combinedFreq);
-        newNode->left = left;
-        newNode->right = right;
-        pq.push(newNode);
+        adj[node].push_back(u.second);
+        adj[node].push_back(v.second);
+        pq.push({u.first + v.first, node}); 
+        node++;
     }
-    root = pq.top();
-    pq.pop();
-}
+    queue<int> q;
+    q.push(node - 1);
 
-void buildHuffmanCodeTable(HuffmanNode *root, std::string code, std::unordered_map<char, std::string> &codeTable)
-{
-    if (root == nullptr)
-    {
-        return;
-    }
-    if (root->data != '$')
-    {
-        codeTable[root->data] = code;
-    }
-    buildHuffmanCodeTable(root->left, code + '0', codeTable);
-    buildHuffmanCodeTable(root->right, code + '1', codeTable);
-}
+    map<int, string> code;
 
-void encodeText(const std::string &text, const std::unordered_map<char, std::string> &codeTable, std::ofstream &output)
-{
-    for (char c : text)
+    while (!q.empty())
     {
-        output << codeTable.at(c);
+        int u = q.front();
+        q.pop();
+        // cout<<u<<": ";
+        if (adj[u].size() > 1)
+        {
+            code[adj[u][0]] = code[u] + "1";
+            code[adj[u][1]] = code[u] + "0";
+            q.push(adj[u][0]);
+            q.push(adj[u][1]);
+        }
+        // cout<<endl;
+    }
+    for (auto it : code)
+    {
+        if (it.first > 255)
+            continue;
+        // printf("%c=%s\n",it.first,it.second.c_str());
+        string res;
+        res += int(it.first);
+        res += int(':');
+        for (auto ch : it.second)
+        {
+            res += ch;
+        }
+        cout << res << endl;
+    }
+    cout << endl;
+    for (int i = 0; i < s.size(); i++)
+    {
+        string cd = code[int(s[i])];
+        // cout<<cd<<endl;
+        string wr;
+        for (int j = 0; j < cd.size(); j++)
+        {
+            wr += cd[j];
+        }
+        cout << wr << ' ';
     }
 }
-
 int main()
 {
-    // Redirect input and output to files
-    std::freopen("input.txt", "r", stdin);
-    std::freopen("EncodedText.txt", "w", stdout);
-
-    // Read input text
-    std::string text;
-    std::getline(std::cin, text);
-
-    // Build frequency map
-    std::unordered_map<char, int> freqMap;
-    for (char c : text)
+    freopen("./input.txt", "r", stdin);
+    // freopen("./encoded.txt", "w", stdout);
+    int t = 1, ts = 0; // cin>>t;
+    while (t--)
     {
-        freqMap[c]++;
+        solve();
     }
-
-    // Build Huffman tree
-    HuffmanNode *root;
-    buildHuffmanTree(freqMap, root);
-
-    // Build Huffman code table
-    std::unordered_map<char, std::string> codeTable;
-    buildHuffmanCodeTable(root, "", codeTable);
-
-    // Encode input text using Huffman codes
-    std::ofstream output("EncodedText.txt");
-    encodeText(text, codeTable, output);
-    output.close();
-
-    // Clean up memory
-    // TODO: implement tree deletion
     return 0;
 }
