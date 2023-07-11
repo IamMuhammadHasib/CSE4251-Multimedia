@@ -41,7 +41,7 @@ void solve()
         pq.pop();
         adj[node].push_back(u.second);
         adj[node].push_back(v.second);
-        pq.push({u.first + v.first, node}); 
+        pq.push({u.first + v.first, node});
         node++;
     }
     queue<int> q;
